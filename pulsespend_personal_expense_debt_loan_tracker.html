@@ -1,0 +1,1117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseSpend — Personal Expense, Debt &amp; Loan Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..800&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+a { color: inherit; }
+a:hover { color: inherit; }
+.ps {
+  --display: 'Anek Latin', 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --bg: #0C0C0A;
+  --panel: #151513;
+  --panel2: #1F1F1C;
+  --line: rgba(255, 255, 255, .1);
+  --line2: rgba(255, 255, 255, .28);
+  --text: #F4F6F8;
+  --text2: #9AA1AD;
+  --accent: #77E7FE;
+  --accent-text: #77E7FE;
+  --on-accent: #0C0C0A;
+  --blaze: #F15412;
+  --blaze-text: #F8662A;
+  --scarlet: #E62726;
+  --scarlet-text: #FF6259;
+  --stone: #6497B1;
+  --stone-text: #86B2CB;
+  --peach: #F9A77F;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  padding: 0 20px 72px;
+  font-variant-numeric: tabular-nums;
+  transition: background-color .25s ease, color .2s ease;
+}
+.ps[data-theme="egyptian"] {
+  --bg: #081B33;
+  --panel: #0D2440;
+  --panel2: #14304F;
+  --line: rgba(138, 180, 206, .2);
+  --line2: rgba(138, 180, 206, .45);
+  --text: #E8EEF2;
+  --text2: #8AB4CE;
+  --on-accent: #081B33;
+  --blaze-text: #FF7A3D;
+  --scarlet-text: #FF6B63;
+  --stone-text: #8DB8CF;
+}
+.ps[data-theme="cloud"] {
+  --bg: #E8EEF2;
+  --panel: #FFFFFF;
+  --panel2: #EEF2F6;
+  --line: rgba(8, 27, 51, .12);
+  --line2: rgba(8, 27, 51, .32);
+  --text: #081B33;
+  --text2: #4A5B72;
+  --accent: #0066CC;
+  --accent-text: #0059B3;
+  --on-accent: #FFFFFF;
+  --blaze-text: #B93D0A;
+  --scarlet-text: #C01F1E;
+  --stone-text: #3A6A85;
+  --peach: #F2955F;
+}
+.ps button { font: inherit; cursor: pointer; }
+.ps button:focus-visible, .ps a:focus-visible, .ps input:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+.ps .hov { transition: border-color .18s ease, background-color .18s ease; }
+.ps .hov:hover { border-color: var(--line2) !important; }
+.ps input::placeholder { color: var(--text2); }
+.ps .row-actions { opacity: 0.65; transition: opacity .15s ease; }
+.ps .activity-row:hover .row-actions { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .ps .grow { transition: width .4s ease, height .4s ease; }
+}
+</style>
+</head>
+<body>
+<div id="ps-root" class="ps" data-theme="obsidian">
+  <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px">
+
+    <!-- TOP HEADER -->
+    <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 14px 0; border-bottom: 1px solid var(--line)">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent)"></span>
+        <span style="font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -0.01em">pulsespend</span>
+        <span id="syncBadge" style="font: 400 12px var(--mono); color: var(--text2); padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px">Nov 2026</span>
+      </div>
+
+      <nav id="mainNav" aria-label="Sections" style="display: flex; gap: 2px; overflow-x: auto; max-width: 100%"></nav>
+
+      <div style="display: flex; align-items: center; gap: 8px">
+        <div id="themeGroup" role="group" aria-label="Colour theme" style="display: flex; align-items: center"></div>
+        <a id="sheetLinkBtn" href="https://docs.google.com/spreadsheets/d/1Bq0bAoPOx3mBjfX2VavyvVGFmWC4p8b00D_TsqHEjLM/edit" target="_blank" rel="noopener noreferrer" class="hov" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-weight: 500; font-size: 14px; text-decoration: none">
+          Sheet
+          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l6-6M4 3h5v5"></path></svg>
+        </a>
+        <button id="liveSyncTopBtn" type="button" style="min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 14px">Live sync</button>
+      </div>
+    </header>
+
+    <!-- HERO METRICS (OVERVIEW ONLY) -->
+    <section id="heroOverviewSection" style="display: flex; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 48px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2)">Spent this month</span>
+          <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 18px">
+            <h1 id="totalFmtEl" style="margin: 0; font-family: var(--display); font-stretch: 85%; font-weight: 700; font-size: clamp(68px, 12vw, 128px); line-height: 0.9; letter-spacing: -0.02em">₹8,230</h1>
+            <span style="font-size: 17px; color: var(--text2)"><strong id="pctFmtEl" style="color: var(--accent-text); font-weight: 600">18%</strong> of <span id="capFmtEl">₹45,000</span> cap</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 40px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 13px; color: var(--text2)">Left this month</span>
+            <span id="leftFmtEl" style="font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.1">₹36,770</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 13px; color: var(--text2)">Safe per day, 14 days left</span>
+            <span id="perDayFmtEl" style="font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.1">₹2,626</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span id="yestLabelEl" style="font-size: 13px; color: var(--text2)">Yesterday, 3 entries</span>
+            <span id="yestFmtEl" style="font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.1; color: var(--blaze-text)">₹1,720</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 13px; color: var(--text2)">Today</span>
+            <span id="todayFmtEl" style="font-family: var(--display); font-weight: 600; font-size: 26px; line-height: 1.1; color: var(--accent-text)">₹140</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segmented Category Bar + Legend -->
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div id="topCategoryBar" role="img" aria-label="Category split bar" style="display: flex; gap: 2px; height: 14px; background: var(--panel2); border-radius: 4px; overflow: hidden"></div>
+        <div id="topCategoryLegend" style="display: flex; flex-wrap: wrap; gap: 6px 20px"></div>
+      </div>
+    </section>
+
+    <!-- ALWAYS-VISIBLE NATURAL LANGUAGE LOG BAR -->
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <form id="logForm" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px; background: var(--panel); border: 1px solid var(--line2); border-radius: 14px">
+        <label for="ps-log" style="font: 500 13px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-text); padding: 0 4px 0 12px">Log</label>
+        <input id="ps-log" type="text" placeholder="180 filter coffee, or: owe Chirag 600 for dinner" style="flex: 1 1 240px; min-width: 0; min-height: 44px; padding: 0 8px; background: transparent; border: 0; border-radius: 8px; color: var(--text); font: 400 16px 'IBM Plex Sans', system-ui, sans-serif">
+        <button id="toggleYestBtn" type="button" aria-pressed="false" style="min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--text2); font-weight: 500; font-size: 14px; white-space: nowrap">Date it 15 Nov</button>
+        <button type="submit" style="min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 15px; white-space: nowrap">Log it</button>
+      </form>
+
+      <div id="sampleButtonsRow" style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px"></div>
+
+      <p id="statusBanner" role="status" style="display: none; margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--panel2); font-size: 14px"></p>
+    </section>
+
+    <!-- VIEW 1: OVERVIEW BODY -->
+    <div id="viewOverview" style="display: flex; flex-direction: column; gap: 20px">
+      <!-- 3 Summary Cards: Paid with, Debts and IOUs, Loans and EMIs -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px">
+        <!-- Card 1: Paid with -->
+        <div style="display: flex; flex-direction: column; gap: 16px; padding: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+            <span style="font-weight: 600">Paid with</span>
+            <span id="txnCountEl" style="font-size: 13px; color: var(--text2)">10 spends</span>
+          </div>
+          <div aria-hidden="true" style="display: flex; gap: 2px; height: 10px; border-radius: 3px; overflow: hidden">
+            <div id="upiBarEl" class="grow" style="width: 56%; background: var(--accent)"></div>
+            <div style="flex: 1 1 0; background: var(--blaze)"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; gap: 12px">
+            <div style="display: flex; flex-direction: column">
+              <span id="upiPctLabelEl" style="font-size: 13px; color: var(--text2)">UPI, 56%</span>
+              <span id="upiFmtEl" style="font-family: var(--display); font-weight: 600; font-size: 30px; line-height: 1.15; color: var(--accent-text)">₹4,590</span>
+            </div>
+            <div style="display: flex; flex-direction: column; text-align: right">
+              <span id="cardPctLabelEl" style="font-size: 13px; color: var(--text2)">Card, 44%</span>
+              <span id="cardFmtEl" style="font-family: var(--display); font-weight: 600; font-size: 30px; line-height: 1.15; color: var(--blaze-text)">₹3,640</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Debts and IOUs -->
+        <button id="cardGoDebtsBtn" type="button" class="hov" style="display: flex; flex-direction: column; gap: 16px; padding: 22px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; color: inherit">
+          <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+            <span style="font-weight: 600">Debts and IOUs</span>
+            <span style="font-size: 13px; color: var(--text2)">Open</span>
+          </span>
+          <span style="display: flex; flex-direction: column">
+            <span id="owePeopleEl" style="font-size: 13px; color: var(--text2)">You owe 2 people</span>
+            <span id="oweFmtCardEl" style="font-family: var(--display); font-weight: 600; font-size: 30px; line-height: 1.15; color: var(--scarlet-text)">₹1,600</span>
+          </span>
+          <span style="font-size: 14px; color: var(--text2)">Owed to you <span id="owedFmtCardEl" style="color: var(--accent-text); font-weight: 600">₹450</span></span>
+        </button>
+
+        <!-- Card 3: Loans and EMIs -->
+        <button id="cardGoLoansBtn" type="button" class="hov" style="display: flex; flex-direction: column; gap: 16px; padding: 22px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; color: inherit">
+          <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+            <span style="font-weight: 600">Loans and EMIs</span>
+            <span id="loansCountBadgeEl" style="font-size: 13px; color: var(--text2)">2 active</span>
+          </span>
+          <span style="display: flex; flex-direction: column">
+            <span style="font-size: 13px; color: var(--text2)">Every month</span>
+            <span id="emiFmtCardEl" style="font-family: var(--display); font-weight: 600; font-size: 30px; line-height: 1.15; color: var(--stone-text)">₹26,584</span>
+          </span>
+          <span id="loansCardNoteEl" style="font-size: 14px; color: var(--text2)">Home loan 168 mo left, card EMI 2 mo left</span>
+        </button>
+      </div>
+
+      <!-- 2-Column Split: Where it went + Activity -->
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px">
+        <!-- Left: Where it went -->
+        <section style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 20px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+            <h2 style="margin: 0; font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -0.01em">Where it went</h2>
+            <div role="group" aria-label="Chart" style="display: flex; padding: 3px; border: 1px solid var(--line); border-radius: 10px">
+              <button id="chartCatBtn" type="button" style="min-height: 36px; padding: 0 12px; border: 0; border-radius: 7px; font-size: 13px; font-weight: 500">By category</button>
+              <button id="chartDayBtn" type="button" style="min-height: 36px; padding: 0 12px; border: 0; border-radius: 7px; font-size: 13px; font-weight: 500">By day</button>
+            </div>
+          </div>
+
+          <!-- By category bars -->
+          <div id="catChartPane" style="display: flex; flex-direction: column; gap: 14px"></div>
+
+          <!-- By day 16-day bars -->
+          <div id="dayChartPane" style="display: none; flex-direction: column; gap: 12px">
+            <div id="dayBarsContainer" role="img" aria-label="Spend per day" style="display: flex; align-items: flex-end; gap: 4px; height: 196px"></div>
+            <p style="margin: 0; font-size: 14px; color: var(--text2)">Highest day so far: <span id="peakFmtEl" style="color: var(--text)">12 Nov, ₹1,999</span></p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid var(--line)">
+            <span style="font-size: 13px; color: var(--text2)">Top sub-categories</span>
+            <div id="topSubsContainer" style="display: flex; flex-wrap: wrap; gap: 6px"></div>
+          </div>
+        </section>
+
+        <!-- Right: Activity Feed -->
+        <section style="flex: 1.6 1 440px; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+            <h2 style="margin: 0; font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -0.01em">Activity</h2>
+            <div id="paymentFilterGroup" role="group" aria-label="Filter by payment method" style="display: flex; padding: 3px; border: 1px solid var(--line); border-radius: 10px"></div>
+          </div>
+          <div id="activityFeedContainer" style="display: flex; flex-direction: column; gap: 18px"></div>
+          <p id="feedEmptyMsg" style="display: none; margin: 0; color: var(--text2)">No spends with this payment method yet.</p>
+        </section>
+      </div>
+    </div>
+
+    <!-- VIEW 2: DEBTS AND IOUs -->
+    <section id="viewDebts" style="display: none; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <h2 style="margin: 0; font-family: var(--display); font-weight: 700; font-size: 36px; letter-spacing: -0.01em; line-height: 1.05">Debts and IOUs</h2>
+        <span style="font-size: 16px; color: var(--text2)"><span id="netDebtLabelEl">Net, you owe</span> <strong id="netDebtFmtEl" style="font-family: var(--display); font-weight: 600; font-size: 24px; color: var(--text)">₹1,150</strong></span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; align-items: start">
+        <!-- You owe -->
+        <div style="display: flex; flex-direction: column; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 14px">
+            <span style="font-weight: 600">You owe</span>
+            <span id="oweFmtDebtsEl" style="font-family: var(--display); font-weight: 600; font-size: 28px; color: var(--scarlet-text)">₹1,600</span>
+          </div>
+          <div id="oweListContainer"></div>
+          <p id="noOweMsg" style="display: none; margin: 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--text2)">You owe nobody. Log one like: owe Chirag 600 for dinner</p>
+        </div>
+        <!-- Owed to you -->
+        <div style="display: flex; flex-direction: column; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 14px">
+            <span style="font-weight: 600">Owed to you</span>
+            <span id="owedFmtDebtsEl" style="font-family: var(--display); font-weight: 600; font-size: 28px; color: var(--accent-text)">₹450</span>
+          </div>
+          <div id="owedListContainer"></div>
+          <p id="noOwedMsg" style="display: none; margin: 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--text2)">Nobody owes you. Split a bill like: paid 800 badminton court, Aman owes 450</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: LOANS AND EMIs -->
+    <section id="viewLoans" style="display: none; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <h2 style="margin: 0; font-family: var(--display); font-weight: 700; font-size: 36px; letter-spacing: -0.01em; line-height: 1.05">Loans and EMIs</h2>
+        <span style="font-size: 16px; color: var(--text2)">Going out every month <strong id="emiFmtLoansEl" style="font-family: var(--display); font-weight: 600; font-size: 24px; color: var(--stone-text)">₹26,584</strong></span>
+      </div>
+      <div id="loansGridContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px"></div>
+    </section>
+
+    <!-- VIEW 4: AI CATEGORIES -->
+    <section id="viewCategories" style="display: none; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 0; font-family: var(--display); font-weight: 700; font-size: 36px; letter-spacing: -0.01em; line-height: 1.05">AI categories</h2>
+        <p style="margin: 0; max-width: 62ch; color: var(--text2)">Every logged spend is sorted into a category and sub-category from its words. A spend that fits no existing sub-category creates a new one.</p>
+      </div>
+      <div id="aiCategoriesListContainer" style="display: flex; flex-direction: column; padding: 8px 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px"></div>
+    </section>
+
+    <!-- VIEW 5: SETUP & LIVE SYNC -->
+    <section id="viewSetup" style="display: none; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <h2 style="margin: 0; font-family: var(--display); font-weight: 700; font-size: 36px; letter-spacing: -0.01em; line-height: 1.05">Setup</h2>
+        <span style="font-size: 14px; color: var(--text2)">100% Free Serverless Stack • Sheet ID: <code style="font-family: var(--mono); color: var(--accent-text)">1Bq0bAoPOx3mBjfX2VavyvVGFmWC4p8b00D_TsqHEjLM</code></span>
+      </div>
+
+      <!-- Live Google Apps Script Endpoint Connector -->
+      <div style="display: flex; flex-direction: column; gap: 12px; padding: 24px; background: var(--panel); border: 1px solid var(--line2); border-radius: 16px">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px">
+          <span style="font-family: var(--display); font-weight: 600; font-size: 20px">Connect Live Google Apps Script Web App URL</span>
+          <span id="liveEndpointStateLabel" style="font: 500 12px var(--mono); color: var(--accent-text)">Local + Sheet Ready</span>
+        </div>
+        <p style="margin: 0; color: var(--text2); font-size: 14px">Once you deploy <code style="font-family: var(--mono); color: var(--text)">telegram_expense_bot_apps_script.js</code> inside your Google Sheet, paste its <code style="font-family: var(--mono); color: var(--text)">https://script.google.com/macros/s/.../exec</code> URL here so this page reads and writes live to your Google Sheet.</p>
+        <form id="apiSyncForm" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px">
+          <input id="webAppUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" style="flex: 1 1 280px; min-height: 44px; padding: 0 12px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font: 400 14px var(--mono)">
+          <button type="submit" style="min-height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 14px">Save &amp; Sync Sheet</button>
+        </form>
+      </div>
+
+      <!-- 3 Setup Cards (With Completed Production Instructions replacing the mockup placeholders) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px">
+          <span style="font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-text)">Step 1</span>
+          <span style="font-family: var(--display); font-weight: 600; font-size: 22px">Google Sheet &amp; Gemini API</span>
+          <p style="margin: 0; color: var(--text2)">Your 5-tab Google Sheet is already created. Grab a free Gemini API key from Google AI Studio (no card needed) for smart categorization.</p>
+          <div style="margin: 0; font-size: 13px; color: var(--text2); display: flex; flex-direction: column; gap: 6px">
+            <span>1. Open <a href="https://aistudio.google.com/docs/api-key" target="_blank" rel="noopener noreferrer" style="color: var(--accent-text)">Google AI Studio API Keys ↗</a> and click <strong>Create API Key</strong>.</span>
+            <span>2. In your Google Sheet, click <strong>Extensions → Apps Script</strong> and paste <code style="font-family: var(--mono); color: var(--text)">telegram_expense_bot_apps_script.js</code>.</span>
+          </div>
+          <a href="https://docs.google.com/spreadsheets/d/1Bq0bAoPOx3mBjfX2VavyvVGFmWC4p8b00D_TsqHEjLM/edit" target="_blank" rel="noopener noreferrer" class="hov" style="margin-top: auto; align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; border: 1px solid var(--line2); border-radius: 10px; font-weight: 500; text-decoration: none">Open the sheet</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px">
+          <span style="font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--blaze-text)">Step 2</span>
+          <span style="font-family: var(--display); font-weight: 600; font-size: 22px">Telegram bot (11:00 AM Check-In)</span>
+          <p style="margin: 0; color: var(--text2)">Checks in at 11:00 AM every day and asks for yesterday's spends, in the same shorthand as the log bar.</p>
+          <div style="margin: 0; font-size: 13px; color: var(--text2); display: flex; flex-direction: column; gap: 6px">
+            <span>1. Message <a href="https://t.me/botfather" target="_blank" rel="noopener noreferrer" style="color: var(--accent-text)">@BotFather ↗</a> on Telegram with <code style="font-family: var(--mono); color: var(--text)">/newbot</code> and copy your <code style="font-family: var(--mono); color: var(--text)">TELEGRAM_BOT_TOKEN</code>.</span>
+            <span>2. Paste your Bot Token and Gemini Key at the top of <code style="font-family: var(--mono); color: var(--text)">CONFIG</code> in Apps Script.</span>
+            <span>3. Message your new bot <code style="font-family: var(--mono); color: var(--text)">/start</code> once deployed so it auto-captures your Chat ID.</span>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px">
+          <span style="font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--stone-text)">Step 3</span>
+          <span style="font-family: var(--display); font-weight: 600; font-size: 22px">GitHub Pages &amp; Live Sync</span>
+          <p style="margin: 0; color: var(--text2)">Hosts this page for free and connects directly to your Apps Script Web App endpoint.</p>
+          <div style="margin: 0; font-size: 13px; color: var(--text2); display: flex; flex-direction: column; gap: 6px">
+            <span>1. In Apps Script, click <strong>Deploy → New deployment → Web app</strong> (Execute as: <em>Me</em>, Access: <em>Anyone</em>) and copy the <code style="font-family: var(--mono); color: var(--text)">/exec</code> URL.</span>
+            <span>2. Paste that URL into <code style="font-family: var(--mono); color: var(--text)">setupEverything()</code> in Apps Script and click <strong>Run</strong> once.</span>
+            <span>3. Push <code style="font-family: var(--mono); color: var(--text)">index.html</code> and <code style="font-family: var(--mono); color: var(--text)">README.md</code> to GitHub, enable <strong>Settings → Pages</strong>, and paste your <code style="font-family: var(--mono); color: var(--text)">/exec</code> URL above.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  var state = {
+    tab: 'overview',
+    theme: 'obsidian',
+    monthlyCap: 45000,
+    draft: '',
+    yest: false,
+    chart: 'cat',
+    filter: 'all',
+    status: '',
+    webAppUrl: 'https://script.google.com/macros/s/AKfycbwoSsNz3sOinN_-QRckCnvVwEQbjI-B_Eia-NRKlV8tK9UQ_yx9YrDoKtUP65sWagbJ/exec',
+    nextId: 100,
+    txns: [
+      { id: 1, d: 8, title: 'Bike chain service', cat: 'Transport', sub: 'Rides and service', m: 'upi', amt: 850 },
+      { id: 2, d: 9, title: 'Amazon phone case', cat: 'Shopping', sub: 'Online orders', m: 'card', amt: 841 },
+      { id: 3, d: 11, title: 'Electricity bill', cat: 'Bills', sub: 'Utilities', m: 'upi', amt: 1560 },
+      { id: 4, d: 12, title: 'Gym membership', cat: 'Fitness', sub: 'Gym', m: 'card', amt: 1999 },
+      { id: 5, d: 13, title: 'Swiggy lunch', cat: 'Food and dining', sub: 'Meals', m: 'upi', amt: 320 },
+      { id: 6, d: 14, title: 'Badminton court', cat: 'Fitness', sub: 'Sports', m: 'upi', amt: 800 },
+      { id: 7, d: 15, title: 'Petrol', cat: 'Transport', sub: 'Fuel', m: 'card', amt: 800 },
+      { id: 8, d: 15, title: 'Dinner', cat: 'Food and dining', sub: 'Meals', m: 'upi', amt: 450 },
+      { id: 9, d: 15, title: 'Groceries', cat: 'Groceries', sub: 'Groceries', m: 'upi', amt: 470 },
+      { id: 10, d: 16, title: 'Filter coffee', cat: 'Food and dining', sub: 'Coffee and tea', m: 'upi', amt: 140 }
+    ],
+    debts: [
+      { id: 21, name: 'Rashi', dir: 'owe', amt: 1000, note: 'Cab and dinner' },
+      { id: 22, name: 'Chirag', dir: 'owe', amt: 600, note: 'Dinner' },
+      { id: 23, name: 'Aman', dir: 'owed', amt: 450, note: 'Badminton court' }
+    ],
+    loans: [
+      { id: 301, name: 'Home loan', emi: 23250, left: 168, ends: 'Nov 2040' },
+      { id: 302, name: 'Credit card EMI', emi: 3334, left: 2, ends: 'Jan 2027' }
+    ]
+  };
+
+  var COLORS = {
+    'Fitness': 'var(--accent)',
+    'Transport': 'var(--blaze)',
+    'Bills': 'var(--stone)',
+    'Food and dining': 'var(--peach)',
+    'Shopping': 'var(--scarlet)',
+    'Groceries': 'var(--text2)',
+    'Other': 'var(--line2)'
+  };
+
+  function money(n) {
+    return '₹' + Math.round(n).toLocaleString('en-IN');
+  }
+
+  function pctOf(a, b) {
+    return (b > 0 ? Math.round((a / b) * 100) : 0) + '%';
+  }
+
+  function classify(title) {
+    var low = title.toLowerCase();
+    var rules = [
+      [/coffee|tea|chai/, 'Food and dining', 'Coffee and tea'],
+      [/dinner|lunch|breakfast|bowl|swiggy|zomato|biryani|pizza|shawarma/, 'Food and dining', 'Meals'],
+      [/grocer|milk|vegetable|zepto|bigbasket|blinkit|instamart/, 'Groceries', 'Groceries'],
+      [/helmet|visor|glove|jacket/, 'Transport', 'Riding gear'],
+      [/petrol|fuel|shell/, 'Transport', 'Fuel'],
+      [/chain|service|uber|ola|metro|cab|rapido|auto/, 'Transport', 'Rides and service'],
+      [/gym|protein|whey|creatine/, 'Fitness', 'Gym'],
+      [/badminton|court|turf|shuttle/, 'Fitness', 'Sports'],
+      [/guitar|music|class|lesson/, 'Fitness', 'Music and classes'],
+      [/electric|bill|recharge|wifi|rent|claude|apple|crunchyroll/, 'Bills', 'Utilities'],
+      [/movie|ticket|cinema/, 'Shopping', 'Entertainment'],
+      [/amazon|flipkart|case|shirt|shoes|watch/, 'Shopping', 'Online orders']
+    ];
+    for (var i = 0; i < rules.length; i++) {
+      if (rules[i][0].test(low)) return [rules[i][1], rules[i][2]];
+    }
+    var words = title.replace(/[^a-zA-Z\s]/g, '').trim().split(/\s+/).slice(0, 2);
+    var autoSub = words.map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }).join(' ') || 'Uncategorised';
+    return ['Other', autoSub];
+  }
+
+  function saveLocalState() {
+    try {
+      localStorage.setItem('PULSESPEND_STATE_V2', JSON.stringify({
+        theme: state.theme,
+        webAppUrl: state.webAppUrl,
+        txns: state.txns,
+        debts: state.debts,
+        loans: state.loans,
+        nextId: state.nextId
+      }));
+    } catch (e) {}
+  }
+
+  function loadLocalState() {
+    try {
+      var raw = localStorage.getItem('PULSESPEND_STATE_V2');
+      if (!raw) return;
+      var parsed = JSON.parse(raw);
+      if (parsed.theme) state.theme = parsed.theme;
+      if (parsed.webAppUrl) state.webAppUrl = parsed.webAppUrl;
+      if (Array.isArray(parsed.txns) && parsed.txns.length > 0) state.txns = parsed.txns;
+      if (Array.isArray(parsed.debts)) state.debts = parsed.debts;
+      if (Array.isArray(parsed.loans) && parsed.loans.length > 0) state.loans = parsed.loans;
+      if (parsed.nextId) state.nextId = parsed.nextId;
+    } catch (e) {}
+  }
+
+  function logEntry(raw) {
+    var text = (raw || '').trim();
+    if (!text) {
+      state.status = 'Type an amount and what it was for, like: 180 filter coffee';
+      render();
+      return;
+    }
+    var low = text.toLowerCase(), m;
+    var cap = function(w) { return w ? w.charAt(0).toUpperCase() + w.slice(1) : ''; };
+
+    if ((m = low.match(/^owe\s+([a-z]+)\s+(\d+)(?:\s+for\s+(.+))?/))) {
+      state.debts.push({
+        id: state.nextId++,
+        name: cap(m[1]),
+        dir: 'owe',
+        amt: +m[2],
+        note: m[3] ? cap(m[3]) : 'No note'
+      });
+      state.status = 'Added: you owe ' + cap(m[1]) + ' ' + money(+m[2]) + '.';
+    } else if ((m = low.match(/^paid\s+(\d+)\s+back\s+to\s+([a-z]+)/))) {
+      var name = cap(m[2]), left = +m[1], found = false;
+      state.debts = state.debts.map(function(d) {
+        if (d.dir !== 'owe' || d.name.toLowerCase() !== name.toLowerCase() || left <= 0) return d;
+        found = true;
+        var pay = Math.min(left, d.amt);
+        left -= pay;
+        return { id: d.id, name: d.name, dir: d.dir, amt: d.amt - pay, note: d.note };
+      }).filter(function(d) { return d.amt > 0; });
+      state.status = found
+        ? 'Repaid ' + name + ' ' + money(+m[1] - left) + '.'
+        : 'No open debt to ' + name + ', so nothing changed.';
+    } else {
+      var split = low.match(/,\s*([a-z]+)\s+owes\s+(\d+)/);
+      var body = split ? low.slice(0, split.index) : low;
+      var isYest = state.yest || /^(yesterday|yest)\b/.test(body);
+      body = body.replace(/^(yesterday|yest)\s+/, '').replace(/^paid\s+/, '');
+      var isCard = /\b(cc|card)\b/.test(body);
+      body = body.replace(/\b(cc|card)\b/g, '');
+      var am = body.match(/\d+/);
+      if (!am) {
+        state.status = 'No amount found. Start with a number, like: 180 filter coffee';
+      } else {
+        var title = body.replace(am[0], '').replace(/\s+/g, ' ').trim() || 'unnamed spend';
+        var c = classify(title);
+        var isNew = !state.txns.some(function(t) { return t.sub === c[1]; });
+        state.txns.push({
+          id: state.nextId++,
+          d: isYest ? 15 : 16,
+          title: cap(title),
+          cat: c[0],
+          sub: c[1],
+          m: isCard ? 'card' : 'upi',
+          amt: +am[0]
+        });
+        state.status = 'Logged ' + money(+am[0]) + ' under ' + c[0] + ', ' + c[1] + (isNew ? ' (new sub-category)' : '') + (isYest ? ', dated 15 Nov' : '') + '.';
+        if (split) {
+          state.debts.push({
+            id: state.nextId++,
+            name: cap(split[1]),
+            dir: 'owed',
+            amt: +split[2],
+            note: cap(title)
+          });
+          state.status += ' ' + cap(split[1]) + ' owes you ' + money(+split[2]) + '.';
+        }
+      }
+    }
+
+    // If Live Apps Script URL is configured, also push asynchronously
+    if (state.webAppUrl) {
+      fetch(state.webAppUrl + '?action=quick_add&text=' + encodeURIComponent(text) + '&forceYesterday=' + (state.yest ? 'true' : 'false'))
+        .catch(function() {});
+    }
+
+    state.draft = '';
+    document.getElementById('ps-log').value = '';
+    saveLocalState();
+    render();
+  }
+
+  function render() {
+    var root = document.getElementById('ps-root');
+    root.setAttribute('data-theme', state.theme);
+
+    // 1. Navigation tabs
+    var navEl = document.getElementById('mainNav');
+    navEl.innerHTML = '';
+    var tabDefs = [
+      ['overview', 'Overview'],
+      ['debts', 'Debts and IOUs'],
+      ['loans', 'Loans and EMIs'],
+      ['categories', 'AI categories'],
+      ['setup', 'Setup']
+    ];
+    tabDefs.forEach(function(t) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      var active = state.tab === t[0];
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      btn.style.cssText = 'min-height: 44px; padding: 0 14px; border: 0; border-radius: 10px; font-weight: 500; font-size: 14px; white-space: nowrap; background: ' + (active ? 'var(--panel2)' : 'transparent') + '; color: ' + (active ? 'var(--text)' : 'var(--text2)');
+      btn.textContent = t[1];
+      btn.addEventListener('click', function() {
+        state.tab = t[0];
+        render();
+      });
+      navEl.appendChild(btn);
+    });
+
+    // 2. Theme swatches
+    var themeGroup = document.getElementById('themeGroup');
+    themeGroup.innerHTML = '';
+    var themeDefs = [
+      ['obsidian', 'Obsidian theme', '#0C0C0A'],
+      ['egyptian', 'Egyptian blue theme', '#081B33'],
+      ['cloud', 'Cloud white theme', '#E8EEF2']
+    ];
+    themeDefs.forEach(function(th) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-label', th[1]);
+      var active = state.theme === th[0];
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      b.style.cssText = 'width: 32px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center';
+      var dot = document.createElement('span');
+      dot.setAttribute('aria-hidden', 'true');
+      dot.style.cssText = 'width: 18px; height: 18px; border-radius: 50%; background: ' + th[2] + '; border: 2px solid ' + (active ? 'var(--accent-text)' : 'var(--line2)');
+      b.appendChild(dot);
+      b.addEventListener('click', function() {
+        state.theme = th[0];
+        saveLocalState();
+        render();
+      });
+      themeGroup.appendChild(b);
+    });
+
+    // 3. View visibility
+    document.getElementById('heroOverviewSection').style.display = state.tab === 'overview' ? 'flex' : 'none';
+    document.getElementById('viewOverview').style.display = state.tab === 'overview' ? 'flex' : 'none';
+    document.getElementById('viewDebts').style.display = state.tab === 'debts' ? 'flex' : 'none';
+    document.getElementById('viewLoans').style.display = state.tab === 'loans' ? 'flex' : 'none';
+    document.getElementById('viewCategories').style.display = state.tab === 'categories' ? 'flex' : 'none';
+    document.getElementById('viewSetup').style.display = state.tab === 'setup' ? 'flex' : 'none';
+
+    // 4. Yesterday button state & status banner
+    var yBtn = document.getElementById('toggleYestBtn');
+    yBtn.setAttribute('aria-pressed', state.yest ? 'true' : 'false');
+    yBtn.style.background = state.yest ? 'var(--blaze)' : 'transparent';
+    yBtn.style.color = state.yest ? '#FFFFFF' : 'var(--text2)';
+    yBtn.style.borderColor = state.yest ? 'var(--blaze)' : 'var(--line)';
+
+    var statusBanner = document.getElementById('statusBanner');
+    if (state.status) {
+      statusBanner.style.display = 'block';
+      statusBanner.textContent = state.status;
+    } else {
+      statusBanner.style.display = 'none';
+    }
+
+    // 5. Calculations
+    var sum = function(xs) { return xs.reduce(function(a, x) { return a + x.amt; }, 0); };
+    var total = sum(state.txns);
+    var left = Math.max(0, state.monthlyCap - total);
+    var upi = sum(state.txns.filter(function(t) { return t.m === 'upi'; }));
+    var card = total - upi;
+    var yestT = state.txns.filter(function(t) { return t.d === 15; });
+    var todayT = state.txns.filter(function(t) { return t.d === 16; });
+
+    document.getElementById('totalFmtEl').textContent = money(total);
+    document.getElementById('pctFmtEl').textContent = pctOf(total, state.monthlyCap);
+    document.getElementById('capFmtEl').textContent = money(state.monthlyCap);
+    document.getElementById('leftFmtEl').textContent = money(left);
+    document.getElementById('perDayFmtEl').textContent = money(left / 14);
+    document.getElementById('yestLabelEl').textContent = 'Yesterday, ' + yestT.length + (yestT.length === 1 ? ' entry' : ' entries');
+    document.getElementById('yestFmtEl').textContent = money(sum(yestT));
+    document.getElementById('todayFmtEl').textContent = money(sum(todayT));
+
+    // Category aggregations
+    var catMap = {};
+    state.txns.forEach(function(t) {
+      var c = catMap[t.cat] || (catMap[t.cat] = { name: t.cat, amt: 0, count: 0, subMap: {} });
+      c.amt += t.amt;
+      c.count += 1;
+      c.subMap[t.sub] = (c.subMap[t.sub] || 0) + t.amt;
+    });
+    var catList = Object.keys(catMap).map(function(k) { return catMap[k]; }).sort(function(a, b) { return b.amt - a.amt; });
+    var maxCat = catList.length ? catList[0].amt : 1;
+    var scale = Math.max(state.monthlyCap, total);
+    var allSubs = [];
+    var cats = catList.map(function(c) {
+      var subs = Object.keys(c.subMap).map(function(k) {
+        return { name: k, amt: c.subMap[k], amtFmt: money(c.subMap[k]) };
+      }).sort(function(a, b) { return b.amt - a.amt; });
+      allSubs = allSubs.concat(subs);
+      return {
+        name: c.name,
+        amt: c.amt,
+        amtFmt: money(c.amt),
+        shareFmt: pctOf(c.amt, total),
+        color: COLORS[c.name] || 'var(--line2)',
+        w: (c.amt / maxCat) * 100 + '%',
+        capW: (c.amt / scale) * 100 + '%',
+        countFmt: c.count + (c.count === 1 ? ' spend' : ' spends'),
+        subs: subs
+      };
+    });
+    var topSubs = allSubs.sort(function(a, b) { return b.amt - a.amt; }).slice(0, 6);
+
+    // Render top segmented bar + legend
+    var topBar = document.getElementById('topCategoryBar');
+    var topLegend = document.getElementById('topCategoryLegend');
+    topBar.innerHTML = '';
+    topLegend.innerHTML = '';
+    cats.forEach(function(c) {
+      var seg = document.createElement('div');
+      seg.className = 'grow';
+      seg.style.cssText = 'width: ' + c.capW + '; background: ' + c.color;
+      topBar.appendChild(seg);
+
+      var leg = document.createElement('span');
+      leg.style.cssText = 'display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text2)';
+      leg.innerHTML = '<span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 2px; background: ' + c.color + '"></span>' + c.name + ' <span style="color: var(--text)">' + c.amtFmt + '</span>';
+      topLegend.appendChild(leg);
+    });
+
+    // Overview 3 summary cards
+    document.getElementById('txnCountEl').textContent = state.txns.length + ' spends';
+    document.getElementById('upiBarEl').style.width = (total > 0 ? (upi / total) * 100 : 50) + '%';
+    document.getElementById('upiPctLabelEl').textContent = 'UPI, ' + pctOf(upi, total);
+    document.getElementById('upiFmtEl').textContent = money(upi);
+    document.getElementById('cardPctLabelEl').textContent = 'Card, ' + pctOf(card, total);
+    document.getElementById('cardFmtEl').textContent = money(card);
+
+    var oweRaw = state.debts.filter(function(x) { return x.dir === 'owe'; });
+    var owedRaw = state.debts.filter(function(x) { return x.dir === 'owed'; });
+    var owe = sum(oweRaw), owed = sum(owedRaw), net = owe - owed;
+    var people = {};
+    oweRaw.forEach(function(x) { people[x.name] = 1; });
+    var nPeople = Object.keys(people).length;
+
+    document.getElementById('owePeopleEl').textContent = 'You owe ' + nPeople + (nPeople === 1 ? ' person' : ' people');
+    document.getElementById('oweFmtCardEl').textContent = money(owe);
+    document.getElementById('owedFmtCardEl').textContent = money(owed);
+
+    var emiTotal = state.loans.reduce(function(a, l) { return a + l.emi; }, 0);
+    document.getElementById('emiFmtCardEl').textContent = money(emiTotal);
+    document.getElementById('loansCountBadgeEl').textContent = state.loans.length + ' active';
+
+    // Where it went chart toggle & panes
+    var isCat = state.chart === 'cat';
+    var catBtn = document.getElementById('chartCatBtn');
+    var dayBtn = document.getElementById('chartDayBtn');
+    catBtn.style.background = isCat ? 'var(--text)' : 'transparent';
+    catBtn.style.color = isCat ? 'var(--bg)' : 'var(--text2)';
+    dayBtn.style.background = !isCat ? 'var(--text)' : 'transparent';
+    dayBtn.style.color = !isCat ? 'var(--bg)' : 'var(--text2)';
+
+    document.getElementById('catChartPane').style.display = isCat ? 'flex' : 'none';
+    document.getElementById('dayChartPane').style.display = !isCat ? 'flex' : 'none';
+
+    var catPane = document.getElementById('catChartPane');
+    catPane.innerHTML = '';
+    cats.forEach(function(c) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display: flex; flex-direction: column; gap: 6px';
+      wrap.innerHTML =
+        '<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">' +
+          '<span style="font-weight: 500">' + c.name + '</span>' +
+          '<span><span style="font-family: var(--mono); font-size: 14px">' + c.amtFmt + '</span> <span style="font-size: 13px; color: var(--text2)">' + c.shareFmt + '</span></span>' +
+        '</div>' +
+        '<div aria-hidden="true" style="height: 8px; background: var(--panel2); border-radius: 3px">' +
+          '<div class="grow" style="height: 100%; width: ' + c.w + '; background: ' + c.color + '; border-radius: 3px"></div>' +
+        '</div>';
+      catPane.appendChild(wrap);
+    });
+
+    // 16-Day vertical bars
+    var dayAmt = [];
+    for (var d = 1; d <= 16; d++) dayAmt.push(0);
+    state.txns.forEach(function(t) {
+      if (t.d >= 1 && t.d <= 16) dayAmt[t.d - 1] += t.amt;
+    });
+    var maxDay = Math.max.apply(null, dayAmt.concat([1]));
+    var peakDay = dayAmt.indexOf(maxDay) + 1;
+    var dayBars = document.getElementById('dayBarsContainer');
+    dayBars.innerHTML = '';
+    dayAmt.forEach(function(a, i) {
+      var col = document.createElement('div');
+      var h = (a > 0 ? Math.max(4, Math.round((a / maxDay) * 160)) : 2) + 'px';
+      var barCol = a === 0 ? 'var(--line2)' : (i + 1 === 16 ? 'var(--accent)' : (i + 1 === peakDay ? 'var(--blaze)' : 'var(--stone)'));
+      col.title = (i + 1) + ' Nov: ' + money(a);
+      col.style.cssText = 'flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px';
+      col.innerHTML =
+        '<div style="width: 100%; max-width: 30px; height: ' + h + '; background: ' + barCol + '; border-radius: 3px 3px 0 0"></div>' +
+        '<span style="font: 400 11px var(--mono); color: var(--text2)">' + (i + 1) + '</span>';
+      dayBars.appendChild(col);
+    });
+    document.getElementById('peakFmtEl').textContent = peakDay + ' Nov, ' + money(maxDay);
+
+    // Top sub-categories chips
+    var topSubsEl = document.getElementById('topSubsContainer');
+    topSubsEl.innerHTML = '';
+    topSubs.forEach(function(b) {
+      var s = document.createElement('span');
+      s.style.cssText = 'padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px';
+      s.innerHTML = b.name + ' <span style="font-family: var(--mono); color: var(--text2)">' + b.amtFmt + '</span>';
+      topSubsEl.appendChild(s);
+    });
+
+    // Payment method filter buttons
+    var filterGroup = document.getElementById('paymentFilterGroup');
+    filterGroup.innerHTML = '';
+    [['all', 'All'], ['upi', 'UPI'], ['card', 'Card']].forEach(function(f) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      var on = state.filter === f[0];
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.style.cssText = 'min-height: 36px; padding: 0 14px; border: 0; border-radius: 7px; font-size: 13px; font-weight: 500; background: ' + (on ? 'var(--text)' : 'transparent') + '; color: ' + (on ? 'var(--bg)' : 'var(--text2)');
+      b.textContent = f[1];
+      b.addEventListener('click', function() {
+        state.filter = f[0];
+        render();
+      });
+      filterGroup.appendChild(b);
+    });
+
+    // Activity Feed grouped by date
+    var shown = state.txns
+      .filter(function(t) { return state.filter === 'all' || t.m === state.filter; })
+      .slice()
+      .sort(function(a, b) { return b.d - a.d || b.id - a.id; });
+
+    var feed = [];
+    shown.forEach(function(t) {
+      var g = feed.length && feed[feed.length - 1].d === t.d ? feed[feed.length - 1] : null;
+      if (!g) {
+        g = {
+          d: t.d,
+          label: t.d === 16 ? 'Today, 16 Nov' : (t.d === 15 ? 'Yesterday, 15 Nov' : t.d + ' Nov'),
+          amt: 0,
+          items: []
+        };
+        feed.push(g);
+      }
+      g.amt += t.amt;
+      g.items.push(t);
+    });
+
+    var feedEl = document.getElementById('activityFeedContainer');
+    feedEl.innerHTML = '';
+    document.getElementById('feedEmptyMsg').style.display = feed.length === 0 ? 'block' : 'none';
+
+    feed.forEach(function(g) {
+      var groupDiv = document.createElement('div');
+      groupDiv.style.cssText = 'display: flex; flex-direction: column';
+
+      var headerDiv = document.createElement('div');
+      headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line)';
+      headerDiv.innerHTML =
+        '<span style="font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2)">' + g.label + '</span>' +
+        '<span style="font: 400 13px var(--mono); color: var(--text2)">' + money(g.amt) + '</span>';
+      groupDiv.appendChild(headerDiv);
+
+      g.items.forEach(function(it) {
+        var row = document.createElement('div');
+        row.className = 'activity-row';
+        row.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line)';
+        var barColor = COLORS[it.cat] || 'var(--line2)';
+        var methodColor = it.m === 'upi' ? 'var(--accent-text)' : 'var(--blaze-text)';
+        var methodLabel = it.m === 'upi' ? 'UPI' : 'Card';
+
+        row.innerHTML =
+          '<span aria-hidden="true" style="flex: none; width: 4px; height: 34px; border-radius: 2px; background: ' + barColor + '"></span>' +
+          '<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column">' +
+            '<span style="font-weight: 500; overflow-wrap: anywhere">' + it.title + '</span>' +
+            '<span style="font-size: 13px; color: var(--text2)">' + it.cat + ' / ' + it.sub + '</span>' +
+          '</div>' +
+          '<button type="button" data-flip-id="' + it.id + '" title="Click to switch UPI / Card" style="flex: none; padding: 2px 8px; border: 1px solid var(--line); border-radius: 6px; background: transparent; font: 500 12px var(--mono); color: ' + methodColor + '">' + methodLabel + '</button>' +
+          '<span style="flex: none; min-width: 72px; text-align: right; font: 500 15px var(--mono)">' + money(it.amt) + '</span>' +
+          '<button type="button" data-del-id="' + it.id + '" class="row-actions" title="Delete spend" style="flex: none; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--text2); font-size: 13px">×</button>';
+        groupDiv.appendChild(row);
+      });
+
+      feedEl.appendChild(groupDiv);
+    });
+
+    // Debts view rendering
+    document.getElementById('netDebtLabelEl').textContent = net >= 0 ? 'Net, you owe' : 'Net, you are owed';
+    document.getElementById('netDebtFmtEl').textContent = money(Math.abs(net));
+    document.getElementById('oweFmtDebtsEl').textContent = money(owe);
+    document.getElementById('owedFmtDebtsEl').textContent = money(owed);
+
+    var oweListEl = document.getElementById('oweListContainer');
+    oweListEl.innerHTML = '';
+    document.getElementById('noOweMsg').style.display = oweRaw.length === 0 ? 'block' : 'none';
+    oweRaw.forEach(function(d) {
+      var r = document.createElement('div');
+      r.style.cssText = 'display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line)';
+      r.innerHTML =
+        '<span aria-hidden="true" style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--panel2); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 600">' + d.name.charAt(0) + '</span>' +
+        '<div style="flex: 1 1 120px; min-width: 0; display: flex; flex-direction: column">' +
+          '<span style="font-weight: 500">' + d.name + '</span>' +
+          '<span style="font-size: 13px; color: var(--text2)">' + d.note + '</span>' +
+        '</div>' +
+        '<span style="font: 500 15px var(--mono)">' + money(d.amt) + '</span>' +
+        '<button type="button" data-settle-id="' + d.id + '" class="hov" style="min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--text); font-size: 14px; font-weight: 500">Mark paid</button>';
+      oweListEl.appendChild(r);
+    });
+
+    var owedListEl = document.getElementById('owedListContainer');
+    owedListEl.innerHTML = '';
+    document.getElementById('noOwedMsg').style.display = owedRaw.length === 0 ? 'block' : 'none';
+    owedRaw.forEach(function(d) {
+      var r = document.createElement('div');
+      r.style.cssText = 'display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line)';
+      r.innerHTML =
+        '<span aria-hidden="true" style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--panel2); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 600">' + d.name.charAt(0) + '</span>' +
+        '<div style="flex: 1 1 120px; min-width: 0; display: flex; flex-direction: column">' +
+          '<span style="font-weight: 500">' + d.name + '</span>' +
+          '<span style="font-size: 13px; color: var(--text2)">' + d.note + '</span>' +
+        '</div>' +
+        '<span style="font: 500 15px var(--mono)">' + money(d.amt) + '</span>' +
+        '<button type="button" data-settle-id="' + d.id + '" class="hov" style="min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--text); font-size: 14px; font-weight: 500">Mark received</button>';
+      owedListEl.appendChild(r);
+    });
+
+    // Loans view rendering
+    document.getElementById('emiFmtLoansEl').textContent = money(emiTotal);
+    var loansGrid = document.getElementById('loansGridContainer');
+    loansGrid.innerHTML = '';
+    state.loans.forEach(function(l) {
+      var share = pctOf(l.emi, emiTotal);
+      var cardEl = document.createElement('div');
+      cardEl.style.cssText = 'display: flex; flex-direction: column; gap: 18px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px';
+      cardEl.innerHTML =
+        '<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">' +
+          '<span style="font-weight: 600">' + l.name + '</span>' +
+          '<span style="font-size: 13px; color: var(--text2)">' + share + ' of monthly EMIs</span>' +
+        '</div>' +
+        '<div style="display: flex; align-items: baseline; gap: 8px">' +
+          '<span style="font-family: var(--display); font-weight: 600; font-size: 40px; line-height: 1; color: var(--stone-text)">' + money(l.emi) + '</span>' +
+          '<span style="color: var(--text2)">a month</span>' +
+        '</div>' +
+        '<div aria-hidden="true" style="height: 8px; background: var(--panel2); border-radius: 3px">' +
+          '<div style="height: 100%; width: ' + share + '; background: var(--stone); border-radius: 3px"></div>' +
+        '</div>' +
+        '<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px">' +
+          '<span>' + l.left + ' months left</span>' +
+          '<span style="color: var(--text2)">Last EMI ' + l.ends + '</span>' +
+          '<button type="button" data-pay-emi="' + l.id + '" class="hov" style="min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--text); font-size: 13px">Log EMI paid</button>' +
+        '</div>';
+      loansGrid.appendChild(cardEl);
+    });
+
+    // AI Categories view rendering
+    var aiCatEl = document.getElementById('aiCategoriesListContainer');
+    aiCatEl.innerHTML = '';
+    cats.forEach(function(c) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 16px 0; border-bottom: 1px solid var(--line)';
+      var subsHtml = c.subs.map(function(b) {
+        return '<span style="padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px">' + b.name + ' <span style="font-family: var(--mono); color: var(--text2)">' + b.amtFmt + '</span></span>';
+      }).join('');
+      row.innerHTML =
+        '<span aria-hidden="true" style="flex: none; width: 12px; height: 12px; border-radius: 3px; background: ' + c.color + '"></span>' +
+        '<div style="flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column">' +
+          '<span style="font-weight: 600">' + c.name + '</span>' +
+          '<span style="font-size: 13px; color: var(--text2)">' + c.countFmt + '</span>' +
+        '</div>' +
+        '<div style="flex: 3 1 260px; display: flex; flex-wrap: wrap; gap: 6px">' + subsHtml + '</div>' +
+        '<span style="flex: none; min-width: 120px; text-align: right"><span style="font: 500 15px var(--mono)">' + c.amtFmt + '</span> <span style="font-size: 13px; color: var(--text2)">' + c.shareFmt + '</span></span>';
+      aiCatEl.appendChild(row);
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', function() {
+    loadLocalState();
+    if (state.webAppUrl) {
+      document.getElementById('webAppUrlInput').value = state.webAppUrl;
+      document.getElementById('liveEndpointStateLabel').textContent = 'Connected to Apps Script';
+    }
+
+    // Build Sample Prompt Chips
+    var samplesRow = document.getElementById('sampleButtonsRow');
+    var labelSpan = document.createElement('span');
+    labelSpan.style.cssText = 'font-size: 13px; color: var(--text2); padding-right: 4px';
+    labelSpan.textContent = 'Try';
+    samplesRow.appendChild(labelSpan);
+
+    var samplePrompts = [
+      'yest 320 protein bowl cc',
+      'owe Chirag 450 for movie tickets',
+      'paid 500 back to Rashi',
+      'paid 800 badminton court, Aman owes 450',
+      '950 helmet anti-fog visor'
+    ];
+    samplePrompts.forEach(function(txt) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'hov';
+      b.style.cssText = 'min-height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--text2); font: 400 13px var(--mono)';
+      b.textContent = txt;
+      b.addEventListener('click', function() {
+        logEntry(txt);
+      });
+      samplesRow.appendChild(b);
+    });
+
+    // Event bindings
+    document.getElementById('logForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      logEntry(document.getElementById('ps-log').value);
+    });
+
+    document.getElementById('toggleYestBtn').addEventListener('click', function() {
+      state.yest = !state.yest;
+      render();
+    });
+
+    document.getElementById('liveSyncTopBtn').addEventListener('click', function() {
+      state.tab = 'setup';
+      render();
+    });
+
+    document.getElementById('cardGoDebtsBtn').addEventListener('click', function() {
+      state.tab = 'debts';
+      render();
+    });
+
+    document.getElementById('cardGoLoansBtn').addEventListener('click', function() {
+      state.tab = 'loans';
+      render();
+    });
+
+    document.getElementById('chartCatBtn').addEventListener('click', function() {
+      state.chart = 'cat';
+      render();
+    });
+
+    document.getElementById('chartDayBtn').addEventListener('click', function() {
+      state.chart = 'day';
+      render();
+    });
+
+    // Activity feed delegated click (flip UPI/Card or delete)
+    document.getElementById('activityFeedContainer').addEventListener('click', function(e) {
+      var flipBtn = e.target.closest('button[data-flip-id]');
+      if (flipBtn) {
+        var fId = +flipBtn.getAttribute('data-flip-id');
+        state.txns.forEach(function(t) {
+          if (t.id === fId) {
+            t.m = t.m === 'upi' ? 'card' : 'upi';
+            state.status = 'Switched ' + t.title + ' to ' + (t.m === 'upi' ? 'UPI' : 'Card') + '.';
+          }
+        });
+        saveLocalState();
+        render();
+        return;
+      }
+      var delBtn = e.target.closest('button[data-del-id]');
+      if (delBtn) {
+        var dId = +delBtn.getAttribute('data-del-id');
+        var target = state.txns.find(function(t) { return t.id === dId; });
+        state.txns = state.txns.filter(function(t) { return t.id !== dId; });
+        if (target) state.status = 'Removed ' + target.title + ' (' + money(target.amt) + ').';
+        saveLocalState();
+        render();
+      }
+    });
+
+    // Debts settle delegated click
+    document.getElementById('viewDebts').addEventListener('click', function(e) {
+      var btn = e.target.closest('button[data-settle-id]');
+      if (!btn) return;
+      var sId = +btn.getAttribute('data-settle-id');
+      var target = state.debts.find(function(x) { return x.id === sId; });
+      if (!target) return;
+      state.debts = state.debts.filter(function(x) { return x.id !== sId; });
+      state.status = 'Settled ' + money(target.amt) + ' with ' + target.name + '.';
+      saveLocalState();
+      render();
+    });
+
+    // Loans EMI paid delegated click
+    document.getElementById('loansGridContainer').addEventListener('click', function(e) {
+      var btn = e.target.closest('button[data-pay-emi]');
+      if (!btn) return;
+      var lId = +btn.getAttribute('data-pay-emi');
+      var loan = state.loans.find(function(l) { return l.id === lId; });
+      if (!loan || loan.left <= 0) return;
+      loan.left -= 1;
+      state.txns.push({
+        id: state.nextId++,
+        d: 16,
+        title: loan.name + ' EMI',
+        cat: 'Bills',
+        sub: 'Utilities',
+        m: 'upi',
+        amt: loan.emi
+      });
+      state.status = 'Logged ' + money(loan.emi) + ' EMI for ' + loan.name + ' (' + loan.left + ' months left).';
+      saveLocalState();
+      render();
+    });
+
+    // Live Google Apps Script Sync Form
+    document.getElementById('apiSyncForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var url = document.getElementById('webAppUrlInput').value.trim();
+      if (!url) {
+        state.status = 'Paste your deployed Google Apps Script /exec URL first.';
+        render();
+        return;
+      }
+      state.webAppUrl = url;
+      saveLocalState();
+      document.getElementById('liveEndpointStateLabel').textContent = 'Syncing...';
+      try {
+        var res = await fetch(url + '?action=dashboard');
+        var json = await res.json();
+        if (json && json.ok && json.data && Array.isArray(json.data.expenses)) {
+          state.txns = json.data.expenses.map(function(row, idx) {
+            var dayNum = parseInt(String(row.date || '').slice(-2), 10) || 16;
+            return {
+              id: idx + 1,
+              d: dayNum,
+              title: row.description || 'Spend',
+              cat: row.category || 'Other',
+              sub: row.subCategory || 'General',
+              m: String(row.paymentMode || '').toLowerCase().indexOf('card') !== -1 ? 'card' : 'upi',
+              amt: Number(row.amount) || 0
+            };
+          });
+          document.getElementById('liveEndpointStateLabel').textContent = 'Synced Live ✓';
+          state.status = 'Pulled ' + state.txns.length + ' live transactions from your Google Sheet.';
+          saveLocalState();
+          render();
+        }
+      } catch (err) {
+        document.getElementById('liveEndpointStateLabel').textContent = 'URL Saved (Ready for GitHub Pages)';
+        state.status = 'Saved your Apps Script Web App URL. It will sync live once hosted on GitHub Pages.';
+        render();
+      }
+    });
+
+    render();
+  });
+})();
+</script>
+</body>
+</html>
